@@ -30,3 +30,13 @@ class GazeTrackingExtend(GazeTracking):
         """Returns true if the user is looking to the left"""
         if self.pupils_located:
             return self.vertical_ratio() >= 0.52
+        
+    def center_coords(self):
+        if self.pupils_located:
+            left_pupil = self.pupil_left_coords()
+            right_pupil = self.pupil_right_coords()
+            x = (left_pupil[0] + right_pupil[0]) / 2
+            y = (left_pupil[1] + right_pupil[1]) / 2
+            return [x, y]
+        else:
+            return None
