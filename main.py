@@ -48,21 +48,20 @@ try:
         cv2.putText(new_frame, text, (60, 60), cv2.FONT_HERSHEY_DUPLEX, 2, (255, 0, 0), 2)
         cv2.imshow("Demo", new_frame)
 
-        # Get pupil coordinates as Python integers
-        left_pupil = gaze.pupil_left_coords()
-        right_pupil = gaze.pupil_right_coords()
+        # Get pupil coordinates 
+        average_pupil = gaze.center_coords()
 
         # Convert numpy.int32 to int for JSON serialization
         #left_pupil = tuple(map(int, left_pupil)) if left_pupil else None
         #right_pupil = tuple(map(int, right_pupil)) if right_pupil else None
         # Convert numpy.int32 to int for JSON serialization
-        left_pupil = list(map(int, left_pupil)) if left_pupil else None
-        right_pupil = list(map(int, right_pupil)) if right_pupil else None
+
+        # not very memory efficient: can use improvements
+        average_pupil = list(map(int, average_pupil)) if average_pupil else None
 
         # Prepare gaze data dictionary
         gaze_data = {
-            "left_pupil": left_pupil,
-            "right_pupil": right_pupil
+            "average_pupil": average_pupil
         }
 
         # Convert gaze data to JSON string
