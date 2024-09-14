@@ -15,9 +15,6 @@ public class GazeController : MonoBehaviour
 
     // Example center coordinate for comparison (could be a fixed point or calculated)
     private Vector2 centerPupil = new Vector2(Screen.width / 2, Screen.height / 2); 
-    private Vector2 moveDirection;
-    private Vector2 previousGazeCoords = Vector2.zero;
-
 
     // Start is called before the first frame update
     void Start()
@@ -40,33 +37,17 @@ public class GazeController : MonoBehaviour
     {
         // Move the ship based on moveDirection
         transform.Translate(moveDirection * speed * Time.deltaTime);
-        
     }
 
-private void OnDataReceived(IAsyncResult result)
-{
-    try
+    private void OnDataReceived(IAsyncResult result)
     {
-        int bytesRead = stream.EndRead(result);
+        try
+        {
+            int bytesRead = stream.EndRead(result);
 
             if (bytesRead > 0)
             {
                 string jsonData = Encoding.UTF8.GetString(receivedBuffer, 0, bytesRead).Trim();
-
-                // Log raw JSON data for debugging
-                Debug.Log($"Raw JSON Data: {jsonData}");
-
-            // Parse the JSON data using Newtonsoft.Json
-            JObject gazeData = JObject.Parse(jsonData);
-
-            // Directly deserialize left_pupil and right_pupil as arrays (lists in Python)
-            float[] leftCoords = gazeData["left_pupil"]?.ToObject<float[]>();
-            float[] rightCoords = gazeData["right_pupil"]?.ToObject<float[]>();
-
-            if (leftCoords != null && rightCoords != null)
-            {
-                Vector2 leftPupil = new Vector2(leftCoords[0], leftCoords[1]);
-                Vector2 rightPupil = new Vector2(rightCoords[0], rightCoords[1]);
 
                 // Log raw JSON data for debugging
                 Debug.Log($"Raw JSON Data: {jsonData}");
@@ -132,22 +113,12 @@ private void OnDataReceived(IAsyncResult result)
                 // Continue reading data from the Python script
                 stream.BeginRead(receivedBuffer, 0, receivedBuffer.Length, OnDataReceived, null);
             }
-            else
-            {
-                // If either pupil is null, stop moving the ship
-                moveDirection = Vector2.zero;
-                Debug.Log("No valid gaze data received. Stopping movement.");
-            }
-
-            // Continue reading data from the Python script
-            stream.BeginRead(receivedBuffer, 0, receivedBuffer.Length, OnDataReceived, null);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error receiving data: " + e.Message);
         }
     }
-    catch (Exception e)
-    {
-        Debug.LogError("Error receiving data: " + e.Message);
-    }
-}
 
     private void OnApplicationQuit()
     {
