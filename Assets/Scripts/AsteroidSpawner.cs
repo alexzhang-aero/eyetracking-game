@@ -9,16 +9,33 @@ public class AsteroidSpawner : MonoBehaviour
     public float spawnRangeX = 8.0f;      // Horizontal range for spawning asteroids
     public float asteroidSpeed = 5.0f;    // Speed at which asteroids fall
     private float timeSinceLastSpawn = 0.0f;
+    public float initialDelay = 5.0f;     // Initial delay before asteroid spawns
 
-    void Update()
+    void Start()
     {
-        timeSinceLastSpawn += Time.deltaTime;
+        // Start the coroutine to delay the spawning process
+        StartCoroutine(StartAsteroidSpawning());
+    }
 
-        // Check if it's time to spawn a new asteroid
-        if (timeSinceLastSpawn >= spawnInterval)
+    // Coroutine that waits for the initial delay and then starts spawning asteroids
+    IEnumerator StartAsteroidSpawning()
+    {
+        // Wait for the initial delay time
+        yield return new WaitForSeconds(initialDelay);
+
+        // Start the asteroid spawning loop after the delay
+        while (true)
         {
-            SpawnAsteroid();
-            timeSinceLastSpawn = 0.0f; // Reset timer after spawning
+            timeSinceLastSpawn += Time.deltaTime;
+
+            // Check if it's time to spawn a new asteroid
+            if (timeSinceLastSpawn >= spawnInterval)
+            {
+                SpawnAsteroid();
+                timeSinceLastSpawn = 0.0f; // Reset timer after spawning
+            }
+
+            yield return null; // Wait for the next frame
         }
     }
 

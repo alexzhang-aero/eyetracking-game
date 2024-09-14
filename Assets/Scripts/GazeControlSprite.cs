@@ -10,7 +10,9 @@ public class GazeController : MonoBehaviour
     private NetworkStream stream;
     private byte[] receivedBuffer;
     public float speed = 5.0f;  // Speed to move the ship
-    private Vector3 moveDirection;
+    private Vector2 moveDirection;
+    private Vector2 previousGazeCoords = Vector2.zero;
+
 
     // Start is called before the first frame update
     void Start()
@@ -33,68 +35,77 @@ public class GazeController : MonoBehaviour
     {
         // Move the ship based on moveDirection
         transform.Translate(moveDirection * speed * Time.deltaTime);
+        
     }
 
-    private void OnDataReceived(IAsyncResult result)
+private void OnDataReceived(IAsyncResult result)
+{
+    try
     {
-        try
-        {
-            int bytesRead = stream.EndRead(result);
+        int bytesRead = stream.EndRead(result);
 
-            if (bytesRead > 0)
+        if (bytesRead > 0)
+        {
+            string jsonData = Encoding.UTF8.GetString(receivedBuffer, 0, bytesRead).Trim();
+
+            // Parse the JSON data using Newtonsoft.Json
+            JObject gazeData = JObject.Parse(jsonData);
+
+            // Directly deserialize left_pupil and right_pupil as arrays (lists in Python)
+            float[] leftCoords = gazeData["left_pupil"]?.ToObject<float[]>();
+            float[] rightCoords = gazeData["right_pupil"]?.ToObject<float[]>();
+
+            if (leftCoords != null && rightCoords != null)
             {
-                string jsonData = Encoding.UTF8.GetString(receivedBuffer, 0, bytesRead).Trim();
+                Vector2 leftPupil = new Vector2(leftCoords[0], leftCoords[1]);
+                Vector2 rightPupil = new Vector2(rightCoords[0], rightCoords[1]);
 
-                // Parse the JSON data using Newtonsoft.Json
-                JObject gazeData = JObject.Parse(jsonData);
+                // Calculate the average coordinates of both pupils
+                Vector2 currentGazeCoords = (leftPupil + rightPupil) / 2;
 
-                // Directly deserialize left_pupil and right_pupil as arrays (lists in Python)
-                float[] leftCoords = gazeData["left_pupil"]?.ToObject<float[]>();
-                float[] rightCoords = gazeData["right_pupil"]?.ToObject<float[]>();
+                // Calculate the difference between the current and previous gaze coordinates
+                Vector2 gazeDelta = currentGazeCoords - previousGazeCoords;
 
-                if (leftCoords != null && rightCoords != null)
-                {
-                    Vector2 leftPupil = new Vector2(leftCoords[0], leftCoords[1]);
-                    Vector2 rightPupil = new Vector2(rightCoords[0], rightCoords[1]);
+                // Log the received coordinates and delta
+                Debug.Log($"Left Pupil: {leftPupil}, Right Pupil: {rightPupil}");
+                Debug.Log($"Current Gaze Coordinates: {currentGazeCoords}");
+                Debug.Log($"Gaze Delta: {gazeDelta}");
 
-                    // Log the received coordinates
-                    Debug.Log($"Left Pupil: {leftPupil}, Right Pupil: {rightPupil}");
+                // Update the movement direction based on gazeDelta
+                moveDirection = CalculateDirection(gazeDelta);
 
-                    // Move based on average of both eyes' pupil coordinates
-                    Vector2 avgCoords = (leftPupil + rightPupil) / 2;
+                // Log the direction
+                Debug.Log($"Move Direction: {moveDirection}");
 
-                    // Convert the average coordinates to a direction for the ship
-                    moveDirection = CalculateDirection(avgCoords);
-
-                    // Log the calculated average and direction
-                    Debug.Log($"Average Gaze Coordinates: {avgCoords}");
-                    Debug.Log($"Move Direction: {moveDirection}");
-                }
-                else
-                {
-                    // If either pupil is null, stop moving the ship
-                    moveDirection = Vector3.zero;
-                    Debug.Log("No valid gaze data received. Stopping movement.");
-                }
-
-                // Continue reading data from the Python script
-                stream.BeginRead(receivedBuffer, 0, receivedBuffer.Length, OnDataReceived, null);
+                // Update the previous gaze coordinates for the next frame
+                previousGazeCoords = currentGazeCoords;
             }
-        }
-        catch (Exception e)
-        {
-            Debug.LogError("Error receiving data: " + e.Message);
+            else
+            {
+                // If either pupil is null, stop moving the ship
+                moveDirection = Vector2.zero;
+                Debug.Log("No valid gaze data received. Stopping movement.");
+            }
+
+            // Continue reading data from the Python script
+            stream.BeginRead(receivedBuffer, 0, receivedBuffer.Length, OnDataReceived, null);
         }
     }
+    catch (Exception e)
+    {
+        Debug.LogError("Error receiving data: " + e.Message);
+    }
+}
 
-    private Vector3 CalculateDirection(Vector2 gazeCoords)
+
+    private Vector2 CalculateDirection(Vector2 gazeDelta)
     {
         // Normalize gaze coordinates to a range that maps to movement
-        float normalizedX = Mathf.Clamp(gazeCoords.x / Screen.width, -1f, 1f);
-        float normalizedY = Mathf.Clamp(gazeCoords.y / Screen.height, -1f, 1f);
+        float normalizedX = Mathf.Clamp(gazeDelta.x / Screen.width, -1f, 1f);
+        float normalizedY = Mathf.Clamp(gazeDelta.y / Screen.height, -1f, 1f);
 
         // Translate normalized coordinates to a direction vector
-        return new Vector3(normalizedX, normalizedY, 0);
+        return new Vector2(normalizedX, normalizedY);
     }
 
     private void OnApplicationQuit()

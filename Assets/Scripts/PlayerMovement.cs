@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -8,6 +10,8 @@ public class PlayerMovement : MonoBehaviour
     private float hInput;
     private float vInput; 
     public GameObject explosionPrefab;
+    public float restartDelay = 2.0f;  // Delay before restarting the game
+
 
 
     // Start is called before the first frame update
@@ -35,6 +39,13 @@ public class PlayerMovement : MonoBehaviour
             Debug.Log("Game Over! Ship hit by an asteroid.");
             // You can trigger a game over event, restart the game, etc.
             Destroy(gameObject);
+            // Call the GameManager to restart the game after the player is destroyed
+            GameManager.instance.RestartGame(restartDelay);
         }
     }
+
+
 }
+        
+
+
