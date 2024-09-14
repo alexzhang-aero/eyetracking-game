@@ -1,0 +1,9 @@
+name: eyetracking
+channels:
+  - conda-forge
+  - anaconda
+  - defaults
+dependencies:
+  - dlib==19.24.4
+  - numpy==1.26.4
+  - setuptools==70.0.0
