@@ -1,70 +1,90 @@
 import cv2
 import socket
 import json
+import numpy as np
 from gaze_tracking.gaze_tracking import GazeTracking
 from gaze_tracking_extend import GazeTrackingExtend
 
 # Initialize GazeTracking and socket
 gaze = GazeTrackingExtend()
 webcam = cv2.VideoCapture(0)
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.connect(('127.0.0.1', 60000))  # Connect to Unity on port 60000
 
-while True:
-    _, frame = webcam.read()
-    gaze.refresh(frame)
+# Create a server socket that listens for a connection from Unity
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind(('127.0.0.1', 60000))  # Bind the server to localhost and port 60000
+server_socket.listen(1)  # Listen for 1 client connection
 
-    # Visual feedback (optional)
-    
+print("Waiting for a connection from Unity...")
 
-    new_frame = gaze.annotated_frame()
-    text = ""
+# Accept the connection from Unity
+client_socket, addr = server_socket.accept()
+print(f"Connection established with {addr}")
 
-    if gaze.is_right():
-        text = "Looking right"
-    elif gaze.is_left():
-        text = "Looking left"
-    elif gaze.is_center():
-        text = "Looking center"
-    elif gaze.is_up():
-        text = "Looking up"
-    elif gaze.is_down():
-        text = "Looking down"
+try:
+    while True:
+        # Capture frame from the webcam
+        _, frame = webcam.read()
+        gaze.refresh(frame)
 
+        # Get the annotated frame for display
+        new_frame = gaze.annotated_frame()
+        text = ""
 
-    gaze.log_pupil_coordinates()
+        if gaze.is_right():
+            text = "Looking right"
+        elif gaze.is_left():
+            text = "Looking left"
+        elif gaze.is_center():
+            text = "Looking center"
+        elif gaze.is_up():
+            text = "Looking up"
+        elif gaze.is_down():
+            text = "Looking down"
 
-    cv2.putText(new_frame, text, (60, 60), cv2.FONT_HERSHEY_DUPLEX, 2, (255, 0, 0), 2)
-    cv2.imshow("Demo", new_frame)
+        # Log the pupil coordinates
+        gaze.log_pupil_coordinates()
 
-    # Get horizontal and vertical gaze ratios
-    horizontal_ratio = gaze.horizontal_ratio() or 0.5  # Default to 0.5 if not detected
-    vertical_ratio = gaze.vertical_ratio() or 0.5  # Default to 0.5 if not detected
+        # Display the text on the frame
+        cv2.putText(new_frame, text, (60, 60), cv2.FONT_HERSHEY_DUPLEX, 2, (255, 0, 0), 2)
+        cv2.imshow("Demo", new_frame)
 
-    left_pupil = gaze.pupil_left_coords()
-    if gaze.pupils_located:
-        left_x = float(left_pupil[0])
-        left_y = float(left_pupil[1])
-    else:
-        left_x = None
-        left_y = None
+        # Get pupil coordinates as Python integers
+        left_pupil = gaze.pupil_left_coords()
+        right_pupil = gaze.pupil_right_coords()
 
-    # Prepare data to send as JSON
-    gaze_data = {
-        "gaze_left_x": left_x,
-        "gaze_left_y": left_y
-        
-    }
-    json_data = json.dumps(gaze_data)
+        # Convert numpy.int32 to int for JSON serialization
+        #left_pupil = tuple(map(int, left_pupil)) if left_pupil else None
+        #right_pupil = tuple(map(int, right_pupil)) if right_pupil else None
+        # Convert numpy.int32 to int for JSON serialization
+        left_pupil = list(map(int, left_pupil)) if left_pupil else None
+        right_pupil = list(map(int, right_pupil)) if right_pupil else None
 
-    # Send gaze data to Unity
-    sock.sendall(json_data.encode('utf-8'))
+        # Prepare gaze data dictionary
+        gaze_data = {
+            "left_pupil": left_pupil,
+            "right_pupil": right_pupil
+        }
 
-    if cv2.waitKey(1) == 27:
-        break
+        # Convert gaze data to JSON string
+        json_data = json.dumps(gaze_data)
 
-# Close resources
-webcam.release()
-cv2.destroyAllWindows()
-sock.close()
+        # Send gaze data to Unity
+        try:
+            client_socket.sendall((json_data + "\n").encode('utf-8'))
+        except Exception as e:
+            print(f"Error sending data to Unity: {e}")
+
+        # Exit the loop if the 'Esc' key is pressed
+        if cv2.waitKey(1) == 27:
+            break
+
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+finally:
+    # Close resources
+    webcam.release()
+    cv2.destroyAllWindows()
+    client_socket.close()
+    server_socket.close()
 
