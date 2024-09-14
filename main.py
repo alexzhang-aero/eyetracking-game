@@ -42,8 +42,12 @@ while True:
     vertical_ratio = gaze.vertical_ratio() or 0.5  # Default to 0.5 if not detected
 
     left_pupil = gaze.pupil_left_coords()
-    left_x = left_pupil[0]
-    left_y = left_pupil[1]
+    if gaze.pupils_located:
+        left_x = float(left_pupil[0])
+        left_y = float(left_pupil[1])
+    else:
+        left_x = None
+        left_y = None
 
     # Prepare data to send as JSON
     gaze_data = {
