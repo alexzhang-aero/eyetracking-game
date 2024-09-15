@@ -7,8 +7,8 @@ class GazeTrackingExtend(GazeTracking):
     """
 
     def __init__(self):
-        super().__init__()  # Call the parent class constructor
-        self.log = []  # To store logs of pupil positions
+        super().__init__()  
+        self.log = [] 
     
     def log_pupil_coordinates(self):
         """Logs the current pupil coordinates to a list"""
@@ -32,6 +32,7 @@ class GazeTrackingExtend(GazeTracking):
             return self.vertical_ratio() >= 0.52
         
     def center_coords(self):
+        """Returns average of left and right eye coordinates"""
         if self.pupils_located:
             left_pupil = self.pupil_left_coords()
             right_pupil = self.pupil_right_coords()
