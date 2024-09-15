@@ -13,14 +13,19 @@ public class GazeController : MonoBehaviour
     private Vector2 moveDirection;
     private Vector2 previousGazeCoords = Vector2.zero;
 
-    // Example center coordinate for comparison (could be a fixed point or calculated)
-    private Vector2 centerPupil = new Vector2(Screen.width / 2, Screen.height / 2); 
+    private KalmanFilter kalmanFilterX;
+    private KalmanFilter kalmanFilterY;
 
-    // Start is called before the first frame update
+    private Vector2 centerPupil = new Vector2(Screen.width / 2, Screen.height / 2);
+
     void Start()
     {
         try
         {
+            // Initialize the Kalman filters
+            kalmanFilterX = new KalmanFilter(centerPupil.x);
+            kalmanFilterY = new KalmanFilter(centerPupil.y);
+
             // Connect to the Python server
             client = new TcpClient("127.0.0.1", 60000);
             stream = client.GetStream();
@@ -35,7 +40,6 @@ public class GazeController : MonoBehaviour
 
     void Update()
     {
-        // Move the ship based on moveDirection
         transform.Translate(moveDirection * speed * Time.deltaTime);
     }
 
@@ -48,17 +52,10 @@ public class GazeController : MonoBehaviour
             if (bytesRead > 0)
             {
                 string jsonData = Encoding.UTF8.GetString(receivedBuffer, 0, bytesRead).Trim();
-
-                // Log raw JSON data for debugging
                 Debug.Log($"Raw JSON Data: {jsonData}");
-
-                // Parse the JSON data using Newtonsoft.Json
                 JObject gazeData = JObject.Parse(jsonData);
-
-                // Directly deserialize as arrays (lists in Python)
                 float[] centerCoord = gazeData["average_pupil"]?.ToObject<float[]>();
 
-                // Log the parsed array and its length
                 if (centerCoord != null)
                 {
                     Debug.Log($"Parsed Center Coordinates: {string.Join(", ", centerCoord)}");
@@ -72,45 +69,33 @@ public class GazeController : MonoBehaviour
                 {
                     Vector2 currentGazeCoords = new Vector2(centerCoord[0], centerCoord[1]);
 
-                    // Log the received coordinates
-                    Debug.Log($"Current Gaze Coordinates: {currentGazeCoords}");
+                    // Apply Kalman filter 
+                    float smoothedX = kalmanFilterX.Update(currentGazeCoords.x);
+                    float smoothedY = kalmanFilterY.Update(currentGazeCoords.y);
+                    Vector2 smoothedGazeCoords = new Vector2(smoothedX, smoothedY);
+
+                    Debug.Log($"Current Gaze Coordinates: {smoothedGazeCoords}");
 
                     if (previousGazeCoords != Vector2.zero)
                     {
-                        // Calculate the direction vector from previous to current gaze coordinates
-                        Vector2 direction = currentGazeCoords - previousGazeCoords;
-
-                        // Calculate the unit direction vector
+                        Vector2 direction = smoothedGazeCoords - previousGazeCoords;
                         Vector2 unitDirection = direction.normalized;
-
-                        // Log the direction and unit vector
-                        Debug.Log($"Direction: {direction}");
-                        Debug.Log($"Unit Direction: {unitDirection}");
-
-                        // Update the movement direction based on unitDirection
-                        moveDirection = unitDirection;
+                        moveDirection = -unitDirection * 8;
                     }
                     else
                     {
-                        // Initialize previousGazeCoords if it's the first valid data
-                        previousGazeCoords = currentGazeCoords;
-                        Debug.Log("Initialized previous gaze coordinates.");
+                        previousGazeCoords = smoothedGazeCoords;
                     }
 
-                    // Update the previous gaze coordinates for the next frame
-                    previousGazeCoords = currentGazeCoords;
-
-                    // Log the movement direction
+                    previousGazeCoords = smoothedGazeCoords;
                     Debug.Log($"Move Direction: {moveDirection}");
                 }
                 else
                 {
-                    // If the data is invalid or incomplete, stop moving the ship
                     moveDirection = Vector2.zero;
-                    Debug.Log("Invalid or incomplete gaze data received. Stopping movement.");
+                    Debug.Log("Invalid or incomplete gaze data received.");
                 }
 
-                // Continue reading data from the Python script
                 stream.BeginRead(receivedBuffer, 0, receivedBuffer.Length, OnDataReceived, null);
             }
         }

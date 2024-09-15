@@ -34,12 +34,12 @@ try:
             text = "Looking right"
         elif gaze.is_left():
             text = "Looking left"
-        elif gaze.is_center():
-            text = "Looking center"
         elif gaze.is_up():
             text = "Looking up"
         elif gaze.is_down():
             text = "Looking down"
+        elif gaze.is_center():
+            text = "Looking center"
 
         # Log the pupil coordinates
         gaze.log_pupil_coordinates()
@@ -73,7 +73,7 @@ try:
         except Exception as e:
             print(f"Error sending data to Unity: {e}")
 
-        # Exit the loop if the 'Esc' key is pressed
+        # Esc to exit
         if cv2.waitKey(1) == 27:
             break
 
@@ -81,9 +81,10 @@ except Exception as e:
     print(f"An error occurred: {e}")
 
 finally:
-    # Close resources
     webcam.release()
     cv2.destroyAllWindows()
-    client_socket.close()
-    server_socket.close()
+    client_socket.close()  
+    server_socket.close()  
+    print("Sockets and webcam resources released")
+
 

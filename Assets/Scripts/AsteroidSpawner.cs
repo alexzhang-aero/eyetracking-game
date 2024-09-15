@@ -9,7 +9,7 @@ public class AsteroidSpawner : MonoBehaviour
     public float spawnRangeX = 8.0f;      // Horizontal range for spawning asteroids
     public float asteroidSpeed = 5.0f;    // Speed at which asteroids fall
     private float timeSinceLastSpawn = 0.0f;
-    public float initialDelay = 5.0f;     // Initial delay before asteroid spawns
+    public float initialDelay = 10.0f;     // Initial delay before asteroid spawns
 
     void Start()
     {
