@@ -17,24 +17,20 @@ public class PythonLauncher : MonoBehaviour
         try
         {
             // Get the path to the Python script relative to the Unity project
-            string projectRoot = Application.dataPath;  // Points to the Assets folder
-            string scriptPath = Path.Combine(projectRoot, "..", "main.py");  // Adjust if necessary
+            //string projectRoot = Application.dataPath;  // Points to the Assets folder
+            //string scriptPath = Path.Combine(projectRoot, "..", "main.py");  // Adjust if necessary
+            string condaActivate = "/Users/alex/miniconda3/bin/conda";
+            string envName = "eyetracking";  
+            string scriptPath = "/Users/alex/Documents/eyetracking-game/main.py";
 
-            // Determine the Python command depending on the platform
-            string pythonCommand = @"C:\Users\ricar\miniconda3\envs\eyetracking\python.exe";  // Adjust this path
+            // Create the full command to activate Conda environment and run Python script
+            string bashCommand = $"-c \"source /Users/alex/miniconda3/etc/profile.d/conda.sh && conda activate {envName} && python {scriptPath}\"";
 
-
-            if (string.IsNullOrEmpty(pythonCommand))
-            {
-                UnityEngine.Debug.LogError("Could not determine Python command.");
-                return;
-            }
-
-            // Launch Python script
+            // Set up process start info
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
-                FileName = pythonCommand,
-                Arguments = $"\"{scriptPath}\"",
+                FileName = "/bin/bash",  // Use bash to run the Conda and Python commands
+                Arguments = bashCommand,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,

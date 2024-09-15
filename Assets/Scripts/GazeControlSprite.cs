@@ -20,7 +20,7 @@ public class GazeController : MonoBehaviour
     // Start is called before the first frame update
      void Start()
     {
-        StartCoroutine(ConnectToServerAfterDelay(10f));  // Adjust the delay as needed
+        StartCoroutine(ConnectToServerAfterDelay(7f));  // Adjust the delay as needed
     }
 
     IEnumerator ConnectToServerAfterDelay(float delay)
