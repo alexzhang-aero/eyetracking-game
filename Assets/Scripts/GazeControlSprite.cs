@@ -2,6 +2,7 @@ using System;
 using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
+using System.Collections; 
 using Newtonsoft.Json.Linq;  // For JSON parsing
 
 public class GazeController : MonoBehaviour
@@ -20,6 +21,13 @@ public class GazeController : MonoBehaviour
 
     void Start()
     {
+        StartCoroutine(ConnectToServerAfterDelay(7f));  // Adjust the delay as needed
+    }
+
+    IEnumerator ConnectToServerAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
         try
         {
             // Initialize the Kalman filters
