@@ -17,10 +17,8 @@ public class AsteroidSpawner : MonoBehaviour
         StartCoroutine(StartAsteroidSpawning());
     }
 
-    // Coroutine that waits for the initial delay and then starts spawning asteroids
     IEnumerator StartAsteroidSpawning()
     {
-        // Wait for the initial delay time
         yield return new WaitForSeconds(initialDelay);
 
         // Start the asteroid spawning loop after the delay
@@ -28,32 +26,31 @@ public class AsteroidSpawner : MonoBehaviour
         {
             timeSinceLastSpawn += Time.deltaTime;
 
-            // Check if it's time to spawn a new asteroid
             if (timeSinceLastSpawn >= spawnInterval)
             {
                 SpawnAsteroid();
-                timeSinceLastSpawn = 0.0f; // Reset timer after spawning
+                timeSinceLastSpawn = 0.0f; // Reset timer
             }
 
-            yield return null; // Wait for the next frame
+            yield return null; 
         }
     }
 
     void SpawnAsteroid()
     {
-        // Select a random asteroid from the array
+        // Select a random asteroid art
         int randomIndex = Random.Range(0, asteroidPrefabs.Length);
         GameObject asteroid = Instantiate(asteroidPrefabs[randomIndex]);
 
-        // Set a random spawn position within the X range and above the screen (Y position)
+        // Set a random spawn position 
         float randomX = Random.Range(-spawnRangeX, spawnRangeX);
-        asteroid.transform.position = new Vector3(randomX, 6.0f, 0.0f);  // Above screen
+        asteroid.transform.position = new Vector3(randomX, 6.0f, 0.0f); 
 
         // Add a downward force to make the asteroid fall
         Rigidbody2D rb = asteroid.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            rb.velocity = new Vector2(0, -asteroidSpeed);  // Move asteroid downward
+            rb.velocity = new Vector2(0, -asteroidSpeed);
         }
     }
 }

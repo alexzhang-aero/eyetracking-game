@@ -12,15 +12,10 @@ public class PlayerMovement : MonoBehaviour
     public GameObject explosionPrefab;
     public float restartDelay = 2.0f;  // Delay before restarting the game
 
-
-
-    // Start is called before the first frame update
     void Start()
     {
-        
-    }
 
-    // Update is called once per frame
+    }
     void Update()
     {
         hInput = Input.GetAxisRaw("Horizontal");
@@ -37,13 +32,13 @@ public class PlayerMovement : MonoBehaviour
         {
             Instantiate(explosionPrefab, transform.position, Quaternion.identity);
             Debug.Log("Game Over! Ship hit by an asteroid.");
-            // You can trigger a game over event, restart the game, etc.
+
             Destroy(gameObject);
-            // Call the GameManager to restart the game after the player is destroyed
+
+            // Restart the game after the player is destroyed
             GameManager.instance.RestartGame(restartDelay);
         }
     }
-
 
 }
         

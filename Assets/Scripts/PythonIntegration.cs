@@ -17,9 +17,6 @@ public class PythonLauncher : MonoBehaviour
         try
         {
             // Get the path to the Python script relative to the Unity project
-            //string projectRoot = Application.dataPath;  // Points to the Assets folder
-            //string scriptPath = Path.Combine(projectRoot, "..", "main.py");  // Adjust if necessary
-            string condaActivate = "/Users/alex/miniconda3/bin/conda";
             string envName = "eyetracking";  
             string scriptPath = "/Users/alex/Documents/eyetracking-game/main.py";
 
