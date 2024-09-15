@@ -2,6 +2,7 @@ using System;
 using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
+using System.Collections; 
 using Newtonsoft.Json.Linq;  // For JSON parsing
 
 public class GazeController : MonoBehaviour
@@ -17,11 +18,17 @@ public class GazeController : MonoBehaviour
     private Vector2 centerPupil = new Vector2(Screen.width / 2, Screen.height / 2); 
 
     // Start is called before the first frame update
-    void Start()
+     void Start()
     {
+        StartCoroutine(ConnectToServerAfterDelay(10f));  // Adjust the delay as needed
+    }
+
+    IEnumerator ConnectToServerAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
         try
         {
-            // Connect to the Python server
             client = new TcpClient("127.0.0.1", 60000);
             stream = client.GetStream();
             receivedBuffer = new byte[1024];
