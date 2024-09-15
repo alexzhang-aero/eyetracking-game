@@ -4,6 +4,7 @@ channels:
   - anaconda
   - defaults
   - menpo
+  
 dependencies:
   - dlib==19.24.4
   - numpy==1.26.4
