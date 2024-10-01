@@ -5,4 +5,6 @@
 
 ## StarGazer is a unique hands-free arcade-style experience. Using eye-tracking and gaze estimation, you will captain a starship as it navigates through a dangerous asteroid field. Your vision, your voyage!
 
+## Developed during Hophacks @ Johns Hopkins University, Top 10 finish
+
 ### This version supports both eye-tracking control and WASD input. To use eye-tracking, open the project in Unity and run using the Play mode.
